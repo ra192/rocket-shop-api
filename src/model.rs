@@ -77,14 +77,15 @@ impl Category {
         }
     }
 
-    pub fn list(conn: &postgres::Connection) -> Vec<Category> {
-        conn.query(
-            "SELECT * FROM category",
-            &[],
-        )
-        .unwrap()
-        .iter()
-        .map(|row| Category::new_from_row(row))
-        .collect()
+    pub fn list_by_parent(parent_id: Option<i64>, conn: &postgres::Connection) -> Vec<Category> {
+        match parent_id {
+            Some(parent_id) => {
+                conn.query("SELECT * FROM category WHERE parent_id = $1", &[&parent_id])
+            }
+            None => conn.query("SELECT * FROM category WHERE parent_id IS NULL", &[]),
+        }.unwrap()
+            .iter()
+            .map(|row| Category::new_from_row(row))
+            .collect()
     }
 }

@@ -24,10 +24,9 @@ struct CreateCategory {
 
 #[derive(Serialize, Deserialize)]
 struct Category {
-    id: i64,
     name: String,
     display_name: String,
-    parent_id: Option<i64>,
+    children: Vec<Category>,
 }
 
 ///
@@ -52,10 +51,7 @@ fn create_user(data: Json<CreateUser>, conn: MyDatabase) -> JsonValue {
 /// curl -X POST -H "Content-Type:application/json" -d '{"name":"cars","display_name":"Batmobile"}' http://localhost:8000/categories
 ///
 #[post("/categories", format = "json", data = "<data>")]
-fn create_category(
-    data: Json<CreateCategory>,
-    conn: MyDatabase,
-) -> JsonValue {
+fn create_category(data: Json<CreateCategory>, conn: MyDatabase) -> JsonValue {
     let new_category = model::Category {
         id: None,
         name: data.name.clone(),
@@ -70,17 +66,19 @@ fn create_category(
 
 #[get("/categories")]
 fn list_category(conn: MyDatabase) -> JsonValue {
-    let categories = model::Category::list(&conn);
-    let categories_json:Vec<Category> = categories
+    let categories = list_category_by_parent(None, &conn);
+    json!({"status": "ok","categories":categories})
+}
+
+fn list_category_by_parent(parent_id: Option<i64>, conn: &postgres::Connection) -> Vec<Category> {
+    model::Category::list_by_parent(parent_id, conn)
         .iter()
-        .map(|itm| Category {
-            id: itm.id.unwrap(),
-            name: itm.name.clone(),
-            display_name: itm.display_name.clone(),
-            parent_id: itm.parent_id,
+        .map(|cat| Category {
+            name: cat.name.clone(),
+            display_name: cat.display_name.clone(),
+            children: list_category_by_parent(cat.id, conn),
         })
-        .collect();
-    json!({"status": "ok","phones":categories_json})
+        .collect()
 }
 
 pub fn launch() {
