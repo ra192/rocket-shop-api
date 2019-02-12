@@ -29,6 +29,15 @@ struct Category {
     children: Vec<Category>,
 }
 
+#[derive(Serialize, Deserialize)]
+struct Product {
+    code: String,
+    description: String,
+    image_url: String,
+    pub price: f64,
+    pub rating: f32,
+}
+
 ///
 /// curl -X POST -H "Content-Type:application/json" -d '{"email":"batman@cave.com","first_name":"Bruce","last_name":"Wayne","access_token":"pass","user_id","1"}' http://localhost:8000/user
 ///
@@ -81,9 +90,38 @@ fn list_category_by_parent(parent_id: Option<i64>, conn: &postgres::Connection) 
         .collect()
 }
 
+#[get("/categories/<category_name>/products")]
+fn list_product(category_name: String, conn: MyDatabase) -> JsonValue {
+    let category = model::Category::get_by_name(category_name, &conn);
+
+    //Error: category doesn't exist
+    if category.is_none() {
+        return json!({"status": "error","text":"wrong category_name"});
+    };
+
+    let category = category.unwrap();
+
+    let products: Vec<Product> =
+        model::Product::list_by_category(category.id.unwrap(), true, &conn)
+            .iter()
+            .map(|prod| Product {
+                code: prod.code.clone(),
+                description: prod.description.clone(),
+                image_url: prod.image_url.clone(),
+                price: prod.price,
+                rating: prod.rating,
+            })
+            .collect();
+
+    json!({"status": "ok","products":products})
+}
+
 pub fn launch() {
     rocket::ignite()
         .attach(MyDatabase::fairing())
-        .mount("/api", routes![create_user, create_category, list_category])
+        .mount(
+            "/api",
+            routes![create_user, create_category, list_category, list_product],
+        )
         .launch();
 }

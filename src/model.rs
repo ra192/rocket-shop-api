@@ -77,15 +77,66 @@ impl Category {
         }
     }
 
+    pub fn get_by_name(name:String,conn: &postgres::Connection)->Option<Category>{
+        let result=conn.query("SELECT * FROM category WHERE name=$1", &[&name]).unwrap();
+        if result.is_empty() {
+            None
+        } else {
+           Some(Category::new_from_row(result.get(0)))
+        }
+    }
+
     pub fn list_by_parent(parent_id: Option<i64>, conn: &postgres::Connection) -> Vec<Category> {
         match parent_id {
             Some(parent_id) => {
                 conn.query("SELECT * FROM category WHERE parent_id = $1", &[&parent_id])
             }
             None => conn.query("SELECT * FROM category WHERE parent_id IS NULL", &[]),
-        }.unwrap()
+        }
+        .unwrap()
+        .iter()
+        .map(|row| Category::new_from_row(row))
+        .collect()
+    }
+}
+
+pub struct Product {
+    pub id: Option<i64>,
+    pub code: String,
+    pub description: String,
+    pub image_url: String,
+    pub price: f64,
+    pub rating: f32,
+    pub category_id: i64,
+}
+
+impl Product {  
+    fn new_from_row(row: postgres::rows::Row) -> Product {
+        Product {
+            id: Some(row.get("id")),
+            code: row.get("code"),
+            description: row.get("description"),
+            image_url: row.get("imageurl"),
+            price: row.get("price"),
+            rating: row.get("rating"),
+            category_id: row.get("category_id"),
+        }
+    }
+
+    pub fn list_by_category(
+        category_id: i64,
+        is_ask: bool,
+        conn: &postgres::Connection,
+    ) -> Vec<Product> {
+        let query = if is_ask {
+            "SELECT * FROM product WHERE category_id=$1 order by displayname limit 10 offset 0"
+        } else {
+            "SELECT * FROM product WHERE category_id=$1 order by $displayname desc limit 10 offset 0"
+        };
+        conn.query(query, &[&category_id])
+            .unwrap()
             .iter()
-            .map(|row| Category::new_from_row(row))
+            .map(|row| Product::new_from_row(row))
             .collect()
     }
 }
