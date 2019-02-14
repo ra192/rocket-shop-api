@@ -90,8 +90,18 @@ fn list_category_by_parent(parent_id: Option<i64>, conn: &postgres::Connection) 
         .collect()
 }
 
-#[get("/categories/<category_name>/products")]
-fn list_product(category_name: String, conn: MyDatabase) -> JsonValue {
+#[get("/categories/<category_name>/products?<is_asc>&<first>&<max>")]
+fn list_product(
+    category_name: String,
+    is_asc: Option<bool>,
+    first: Option<i64>,
+    max: Option<i64>,
+    conn: MyDatabase,
+) -> JsonValue {
+    let is_asc = is_asc.unwrap_or_else(|| true);
+    let max = max.unwrap_or_else(|| 10);
+    let first = first.unwrap_or_else(|| 0);
+
     let category = model::Category::get_by_name(category_name, &conn);
 
     //Error: category doesn't exist
@@ -102,7 +112,7 @@ fn list_product(category_name: String, conn: MyDatabase) -> JsonValue {
     let category = category.unwrap();
 
     let products: Vec<Product> =
-        model::Product::list_by_category(category.id.unwrap(), true, &conn)
+        model::Product::list_by_category(category.id.unwrap(), is_asc, first, max, &conn)
             .iter()
             .map(|prod| Product {
                 code: prod.code.clone(),

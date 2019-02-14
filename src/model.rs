@@ -77,12 +77,14 @@ impl Category {
         }
     }
 
-    pub fn get_by_name(name:String,conn: &postgres::Connection)->Option<Category>{
-        let result=conn.query("SELECT * FROM category WHERE name=$1", &[&name]).unwrap();
+    pub fn get_by_name(name: String, conn: &postgres::Connection) -> Option<Category> {
+        let result = conn
+            .query("SELECT * FROM category WHERE name=$1", &[&name])
+            .unwrap();
         if result.is_empty() {
             None
         } else {
-           Some(Category::new_from_row(result.get(0)))
+            Some(Category::new_from_row(result.get(0)))
         }
     }
 
@@ -110,7 +112,7 @@ pub struct Product {
     pub category_id: i64,
 }
 
-impl Product {  
+impl Product {
     fn new_from_row(row: postgres::rows::Row) -> Product {
         Product {
             id: Some(row.get("id")),
@@ -125,15 +127,17 @@ impl Product {
 
     pub fn list_by_category(
         category_id: i64,
-        is_ask: bool,
+        is_asc: bool,
+        first: i64,
+        max: i64,
         conn: &postgres::Connection,
     ) -> Vec<Product> {
-        let query = if is_ask {
-            "SELECT * FROM product WHERE category_id=$1 order by displayname limit 10 offset 0"
+        let query = if is_asc {
+            "SELECT * FROM product WHERE category_id=$1 order by displayname limit $2 offset $3"
         } else {
-            "SELECT * FROM product WHERE category_id=$1 order by $displayname desc limit 10 offset 0"
+            "SELECT * FROM product WHERE category_id=$1 order by displayname desc limit $2 offset $3"
         };
-        conn.query(query, &[&category_id])
+        conn.query(query, &[&category_id, &max, &first])
             .unwrap()
             .iter()
             .map(|row| Product::new_from_row(row))
