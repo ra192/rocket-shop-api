@@ -113,7 +113,7 @@ fn list_product(
     let category = category.unwrap();
 
     let products: Vec<Product> =
-        model::Product::list_by_category(category.id.unwrap(), is_asc, first, max, &conn)
+        model::Product::list_by_category(category.id.unwrap(), "displayname", is_asc, first, max, &conn)
             .iter()
             .map(|prod| Product {
                 code: prod.code.clone(),

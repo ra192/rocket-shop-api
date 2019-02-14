@@ -105,7 +105,7 @@ impl Category {
 pub struct Product {
     pub id: Option<i64>,
     pub code: String,
-    pub display_name:String,
+    pub display_name: String,
     pub description: String,
     pub image_url: String,
     pub price: f64,
@@ -129,18 +129,24 @@ impl Product {
 
     pub fn list_by_category(
         category_id: i64,
-        // order_prop: &str,
+        order_prop: &str,
         is_asc: bool,
         first: i64,
         max: i64,
         conn: &postgres::Connection,
     ) -> Vec<Product> {
         let query = if is_asc {
-            "SELECT * FROM product WHERE category_id=$1 order by displayname limit $2 offset $3"
+            format!(
+                "SELECT * FROM product WHERE category_id=$1 order by {} limit $2 offset $3",
+                order_prop
+            )
         } else {
-            "SELECT * FROM product WHERE category_id=$1 order by displayname desc limit $2 offset $3"
+            format!(
+                "SELECT * FROM product WHERE category_id=$1 order by {} desc limit $2 offset $3",
+                order_prop
+            )
         };
-        conn.query(query, &[&category_id, &max, &first])
+        conn.query(&query, &[&category_id, &max, &first])
             .unwrap()
             .iter()
             .map(|row| Product::new_from_row(row))
