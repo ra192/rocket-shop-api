@@ -105,6 +105,7 @@ impl Category {
 pub struct Product {
     pub id: Option<i64>,
     pub code: String,
+    pub display_name:String,
     pub description: String,
     pub image_url: String,
     pub price: f64,
@@ -117,6 +118,7 @@ impl Product {
         Product {
             id: Some(row.get("id")),
             code: row.get("code"),
+            display_name: row.get("displayname"),
             description: row.get("description"),
             image_url: row.get("imageurl"),
             price: row.get("price"),
@@ -127,6 +129,7 @@ impl Product {
 
     pub fn list_by_category(
         category_id: i64,
+        // order_prop: &str,
         is_asc: bool,
         first: i64,
         max: i64,

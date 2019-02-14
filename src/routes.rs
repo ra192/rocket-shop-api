@@ -32,6 +32,7 @@ struct Category {
 #[derive(Serialize, Deserialize)]
 struct Product {
     code: String,
+    display_name: String,
     description: String,
     image_url: String,
     pub price: f64,
@@ -116,6 +117,7 @@ fn list_product(
             .iter()
             .map(|prod| Product {
                 code: prod.code.clone(),
+                display_name: prod.display_name.clone(),
                 description: prod.description.clone(),
                 image_url: prod.image_url.clone(),
                 price: prod.price,
