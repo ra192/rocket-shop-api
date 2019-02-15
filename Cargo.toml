@@ -1,5 +1,5 @@
 [package]
-name = "shop-api-rocket"
+name = "rocket-shop-api"
 version = "0.1.0"
 authors = ["Roman Yakovlev <yakovlev.roman@gmail.com>"]
 edition = "2018"
