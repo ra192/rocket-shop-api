@@ -1,7 +1,13 @@
 use rocket_contrib::databases::postgres;
 
+fn nextval(seq_name: &str, conn: &postgres::Connection) -> i64 {
+    let query=format!("SELECT nextval('{}')", seq_name);
+    let nextval=conn.query(&query, &[]).unwrap().get(0).get(0);
+    nextval
+}
+
 pub struct User {
-    pub id: Option<i64>,
+    pub id: i64,
     pub email: String,
     pub first_name: String,
     pub last_name: String,
@@ -9,73 +15,60 @@ pub struct User {
 }
 
 impl User {
-    pub fn create(user: User, conn: &postgres::Connection) -> User {
-        let id: i64 = conn
-            .query("SELECT nextval('users_sequence')", &[])
-            .unwrap()
-            .get(0)
-            .get(0);
+    pub fn create(email: &str, first_name: &str, last_name: &str, access_token: &str, conn: &postgres::Connection) -> i64 {
+        let id = nextval("users_sequence", &conn);
 
         conn.execute(
             "INSERT INTO users(id,email,firstname,lastname,accesstoken) VALUES($1,$2,$3,$4,$5) ",
             &[
                 &id,
-                &user.email,
-                &user.first_name,
-                &user.last_name,
-                &user.access_token,
+                &email,
+                &first_name,
+                &last_name,
+                &access_token,
             ],
         )
         .unwrap();
-        User {
-            id: Some(id),
-            ..user
-        }
+        
+        id
     }
 }
 
 pub struct Category {
-    pub id: Option<i64>,
+    pub id: i64,
     pub name: String,
     pub display_name: String,
     pub parent_id: Option<i64>,
 }
 
 impl Category {
-    pub fn create(new_item: Category, conn: &postgres::Connection) -> Category {
-        let id: i64 = conn
-            .query("SELECT nextval('category_sequence')", &[])
-            .unwrap()
-            .get(0)
-            .get(0);
+    pub fn create(name: &str, display_name: &str, parent_id: &Option<i64>, conn: &postgres::Connection) -> i64 {
+        let id = nextval("category_sequence",&conn);
 
         conn.execute(
             "INSERT INTO category(id,name,displayname,parent_id) VALUES($1,$2,$3,$4) ",
             &[
                 &id,
-                &new_item.name,
-                &new_item.display_name,
-                &new_item.parent_id,
+                &name,
+                &display_name,
+                &parent_id,
             ],
         )
         .unwrap();
 
-        Category {
-            id: Some(id),
-            ..new_item
-        }
+        id
     }
 
     fn new_from_row(row: postgres::rows::Row) -> Category {
         Category {
-            id: Some(row.get("id")),
+            id: row.get("id"),
             name: row.get("name"),
             display_name: row.get("displayname"),
             parent_id: row.get("parent_id"),
         }
     }
 
-    pub fn get_by_name(name: String, conn: &postgres::Connection) -> Option<Category> {
+    pub fn get_by_name(name: &str, conn: &postgres::Connection) -> Option<Category> {
         let result = conn
             .query("SELECT * FROM category WHERE name=$1", &[&name])
             .unwrap();
@@ -101,7 +94,7 @@ impl Category {
 }
 
 pub struct Product {
-    pub id: Option<i64>,
+    pub id: i64,
     pub code: String,
     pub display_name: String,
     pub description: String,
@@ -114,7 +107,7 @@ pub struct Product {
 impl Product {
     fn new_from_row(row: postgres::rows::Row) -> Product {
         Product {
-            id: Some(row.get("id")),
+            id: row.get("id"),
             code: row.get("code"),
             display_name: row.get("displayname"),
             description: row.get("description"),

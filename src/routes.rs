@@ -18,7 +18,7 @@ struct CreateUser {
 struct CreateCategory {
     name: String,
     display_name: String,
-    parent_id: i64,
+    parent_id: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -41,35 +41,20 @@ struct Product {
 ///
 /// curl -X POST -H "Content-Type:application/json" -d '{"email":"batman@cave.com","first_name":"Bruce","last_name":"Wayne","access_token":"pass"}' http://localhost:8000/user
 ///
-#[post("/user", format = "json", data = "<data>")]
+#[post("/users/create", format = "json", data = "<data>")]
 fn create_user(data: Json<CreateUser>, conn: MyDatabase) -> JsonValue {
-    let user = model::User {
-        id: None,
-        email: data.email.clone(),
-        first_name: data.first_name.clone(),
-        last_name: data.last_name.clone(),
-        access_token: data.access_token.clone(),
-    };
-
-    let user = model::User::create(user, &conn);
-    json!({ "status": "ok", "user_id": user.id.unwrap()})
+    model::User::create(&data.email, &data.first_name, &data.last_name, &data.access_token, &conn);
+    json!({ "status": "ok"})
 }
 
 ///
 /// curl -X POST -H "Content-Type:application/json" -d '{"name":"cars","display_name":"Batmobile"}' http://localhost:8000/categories
 ///
-#[post("/categories", format = "json", data = "<data>")]
+#[post("/categories/create", format = "json", data = "<data>")]
 fn create_category(data: Json<CreateCategory>, conn: MyDatabase) -> JsonValue {
-    let new_category = model::Category {
-        id: None,
-        name: data.name.clone(),
-        display_name: data.display_name.clone(),
-        parent_id: Some(data.parent_id.clone()),
-    };
+    model::Category::create(&data.name, &data.display_name, &data.parent_id, &conn);
 
-    let new_category = model::Category::create(new_category, &conn);
-
-    json!({ "status": "ok", "id" : new_category.id.unwrap()})
+    json!({ "status": "ok"})
 }
 
 #[get("/categories")]
@@ -84,7 +69,7 @@ fn list_category_by_parent(parent_id: Option<i64>, conn: &postgres::Connection) 
         .map(|cat| Category {
             name: cat.name.clone(),
             display_name: cat.display_name.clone(),
-            children: list_category_by_parent(cat.id, conn),
+            children: list_category_by_parent(Some(cat.id), conn),
         })
         .collect()
 }
@@ -101,7 +86,7 @@ fn list_product(
     let max = max.unwrap_or_else(|| 10);
     let first = first.unwrap_or_else(|| 0);
 
-    let category = model::Category::get_by_name(category_name, &conn);
+    let category = model::Category::get_by_name(&category_name, &conn);
 
     //Error: category doesn't exist
     if category.is_none() {
@@ -111,7 +96,7 @@ fn list_product(
     let category = category.unwrap();
 
     let products: Vec<Product> =
-        model::Product::list_by_category(category.id.unwrap(), "displayname", is_asc, first, max, &conn)
+        model::Product::list_by_category(category.id, "displayname", is_asc, first, max, &conn)
             .iter()
             .map(|prod| Product {
                 code: prod.code.clone(),
