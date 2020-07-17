@@ -6,7 +6,6 @@ pub struct User {
     pub first_name: String,
     pub last_name: String,
     pub access_token: String,
-    pub user_id: i64,
 }
 
 impl User {
@@ -25,7 +24,6 @@ impl User {
                 &user.first_name,
                 &user.last_name,
                 &user.access_token,
-                &user.user_id,
             ],
         )
         .unwrap();

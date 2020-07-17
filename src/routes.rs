@@ -12,7 +12,6 @@ struct CreateUser {
     first_name: String,
     last_name: String,
     access_token: String,
-    user_id: i64,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -40,7 +39,7 @@ struct Product {
 }
 
 ///
-/// curl -X POST -H "Content-Type:application/json" -d '{"email":"batman@cave.com","first_name":"Bruce","last_name":"Wayne","access_token":"pass","user_id","1"}' http://localhost:8000/user
+/// curl -X POST -H "Content-Type:application/json" -d '{"email":"batman@cave.com","first_name":"Bruce","last_name":"Wayne","access_token":"pass","user_id"}' http://localhost:8000/user
 ///
 #[post("/user", format = "json", data = "<data>")]
 fn create_user(data: Json<CreateUser>, conn: MyDatabase) -> JsonValue {
@@ -50,7 +49,6 @@ fn create_user(data: Json<CreateUser>, conn: MyDatabase) -> JsonValue {
         first_name: data.first_name.clone(),
         last_name: data.last_name.clone(),
         access_token: data.access_token.clone(),
-        user_id: data.user_id,
     };
 
     let user = model::User::create(user, &conn);
