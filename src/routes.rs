@@ -39,7 +39,7 @@ struct Product {
 }
 
 ///
-/// curl -X POST -H "Content-Type:application/json" -d '{"email":"batman@cave.com","first_name":"Bruce","last_name":"Wayne","access_token":"pass"}' http://localhost:8000/user
+/// curl -X POST -H "Content-Type:application/json" -d '{"email":"batman@cave.com","first_name":"Bruce","last_name":"Wayne","access_token":"pass"}' http://localhost:8000/api/user/create
 ///
 #[post("/users/create", format = "json", data = "<data>")]
 fn create_user(data: Json<CreateUser>, conn: MyDatabase) -> JsonValue {
@@ -48,7 +48,7 @@ fn create_user(data: Json<CreateUser>, conn: MyDatabase) -> JsonValue {
 }
 
 ///
-/// curl -X POST -H "Content-Type:application/json" -d '{"name":"cars","display_name":"Batmobile"}' http://localhost:8000/categories
+/// curl -X POST -H "Content-Type:application/json" -d '{"name":"cars","display_name":"Batmobile"}' http://localhost:8000/api/categories/create
 ///
 #[post("/categories/create", format = "json", data = "<data>")]
 fn create_category(data: Json<CreateCategory>, conn: MyDatabase) -> JsonValue {
