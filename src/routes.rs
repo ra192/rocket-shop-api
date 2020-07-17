@@ -39,7 +39,7 @@ struct Product {
 }
 
 ///
-/// curl -X POST -H "Content-Type:application/json" -d '{"email":"batman@cave.com","first_name":"Bruce","last_name":"Wayne","access_token":"pass","user_id"}' http://localhost:8000/user
+/// curl -X POST -H "Content-Type:application/json" -d '{"email":"batman@cave.com","first_name":"Bruce","last_name":"Wayne","access_token":"pass"}' http://localhost:8000/user
 ///
 #[post("/user", format = "json", data = "<data>")]
 fn create_user(data: Json<CreateUser>, conn: MyDatabase) -> JsonValue {
