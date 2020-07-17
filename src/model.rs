@@ -12,13 +12,13 @@ pub struct User {
 impl User {
     pub fn create(user: User, conn: &postgres::Connection) -> User {
         let id: i64 = conn
-            .query("SELECT nextval('hibernate_sequence')", &[])
+            .query("SELECT nextval('users_sequence')", &[])
             .unwrap()
             .get(0)
             .get(0);
 
         conn.execute(
-            "INSERT INTO users(id,email,firstname,lastname,accesstoken,userid) VALUES($1,$2,$3,$4,$5,$6) ",
+            "INSERT INTO users(id,email,firstname,lastname,accesstoken) VALUES($1,$2,$3,$4,$5) ",
             &[
                 &id,
                 &user.email,
@@ -46,7 +46,7 @@ pub struct Category {
 impl Category {
     pub fn create(new_item: Category, conn: &postgres::Connection) -> Category {
         let id: i64 = conn
-            .query("SELECT nextval('hibernate_sequence')", &[])
+            .query("SELECT nextval('category_sequence')", &[])
             .unwrap()
             .get(0)
             .get(0);
